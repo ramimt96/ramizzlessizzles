@@ -5,11 +5,34 @@ import { useCart } from '@/context/CartContext';
 
 export default function Menu() {
   const { items: cartItems, setItemQuantity } = useCart();
+  const [mounted, setMounted] = useState(false);
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({
     burger: 0,
     fries: 0,
     hotdog: 0
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const newQuantities = {...itemQuantities};
+    
+    Object.keys(newQuantities).forEach(key => {
+      newQuantities[key] = 0;
+    });
+    
+    cartItems.forEach(item => {
+      if (newQuantities.hasOwnProperty(item.id)) {
+        newQuantities[item.id] = item.quantity;
+      }
+    });
+    
+    setItemQuantities(newQuantities);
+  }, [cartItems, mounted]);
 
   const menuItems = [
     {
@@ -35,22 +58,6 @@ export default function Menu() {
     }
   ];
 
-  useEffect(() => {
-    const newQuantities = {...itemQuantities};
-    
-    Object.keys(newQuantities).forEach(key => {
-      newQuantities[key] = 0;
-    });
-    
-    cartItems.forEach(item => {
-      if (newQuantities.hasOwnProperty(item.id)) {
-        newQuantities[item.id] = item.quantity;
-      }
-    });
-    
-    setItemQuantities(newQuantities);
-  }, [cartItems, itemQuantities]);
-
   const handleDecreaseQuantity = (id: string, name: string, price: number) => {
     const currentQuantity = itemQuantities[id];
     if (currentQuantity > 0) {
@@ -64,6 +71,35 @@ export default function Menu() {
     const newQuantity = currentQuantity + 1;
     setItemQuantity(id, name, price, newQuantity);
   };
+
+  if (!mounted) {
+    return (
+      <section 
+        className="py-12 px-4 bg-black"
+        style={{ 
+          padding: '48px 20px', 
+          textAlign: 'center',
+          background: '#0a0a0a',
+          minHeight: '100vh'
+        }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <h2 
+            className="text-3xl font-bold text-center mb-2"
+            style={{ 
+              fontSize: '2.25rem', 
+              fontWeight: 'bold',
+              color: '#e8c39e',
+              marginBottom: '8px',
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}
+          >
+            Loading...
+          </h2>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section 

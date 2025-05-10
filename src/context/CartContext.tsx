@@ -16,6 +16,7 @@ interface CartContextType {
   setItemQuantity: (id: string, name: string, price: number, quantity: number) => void;
   total: number;
   itemCount: number;
+  mounted: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,28 +25,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [total, setTotal] = useState(0);
   const [itemCount, setItemCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   // Load cart from localStorage on initial load
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        setItems(JSON.parse(savedCart));
-      }
+    setMounted(true);
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setItems(JSON.parse(savedCart));
     }
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     const newTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const newCount = items.reduce((sum, item) => sum + item.quantity, 0);
     
     setTotal(newTotal);
     setItemCount(newCount);
     
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cart', JSON.stringify(items));
-    }
-  }, [items]);
+    localStorage.setItem('cart', JSON.stringify(items));
+  }, [items, mounted]);
 
   const addItem = (id: string, name: string, price: number) => {
     setItems(prevItems => {
@@ -109,7 +110,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clearCart,
         setItemQuantity, 
         total,
-        itemCount
+        itemCount,
+        mounted
       }}
     >
       {children}
